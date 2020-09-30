@@ -10,6 +10,7 @@ using DevelopersTeste.Models;
 
 namespace DevelopersTeste.Controllers
 {
+  [Route("TesteGrupos")]
   public class GrupoController : Controller
   {
     private readonly ILogger<GrupoController> _logger;
@@ -20,14 +21,14 @@ namespace DevelopersTeste.Controllers
       this.context = contexto;
     }
 
-    [Route("TesteGrupos")]
+    [HttpGet]
     public JsonResult index()
     {
       IList<Grupo> dao = new GrupoDAO(context).Lista();
       return Json(dao);
     }
 
-    [HttpPost("TesteGrupos")]
+    [HttpPost]
     [ApiConventionMethod(typeof(DefaultApiConventions),
                        nameof(DefaultApiConventions.Post))]
     public IActionResult Add([FromBody] Grupo grupo)
@@ -48,7 +49,7 @@ namespace DevelopersTeste.Controllers
 
     [ApiConventionMethod(typeof(DefaultApiConventions),
                        nameof(DefaultApiConventions.Put))]
-    [HttpPut("TesteGrupos")]
+    [HttpPut]
     public IActionResult Editar([FromBody] Grupo grupo)
     {
       GrupoDAO dao = new GrupoDAO(context);
@@ -66,7 +67,7 @@ namespace DevelopersTeste.Controllers
 
     }
 
-    [HttpDelete("TesteGrupos")]
+    [HttpDelete]
     [ApiConventionMethod(typeof(DefaultApiConventions),
                        nameof(DefaultApiConventions.Delete))]
     public IActionResult Apagar(int grupoId)
@@ -83,7 +84,7 @@ namespace DevelopersTeste.Controllers
       }
     }
 
-    [HttpGet("TesteGrupos/{grupoId}")]
+    [HttpGet("{grupoId}")]
     public IActionResult GrupoGrupo(int grupoId)
     {
       GrupoDAO dao = new GrupoDAO(context);
@@ -92,7 +93,7 @@ namespace DevelopersTeste.Controllers
         Grupo grupo = dao.FetchById(grupoId);
         if (grupo == null)
         {
-          throw new Exception("e");
+          throw new Exception();
         }
 
         return Json(grupo);

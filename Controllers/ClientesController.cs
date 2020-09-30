@@ -10,26 +10,53 @@ using DevelopersTeste.Models;
 
 namespace DevelopersTeste.Controllers
 {
+  [Route("api/TesteClientes")]
   public class ClienteController : Controller
   {
     private readonly ILogger<ClienteController> _logger;
     DevelopersContext context;
-    public ClienteController(ILogger<ClienteController> logger, DevelopersContext contexto)
+    public ClienteController(ILogger<ClienteController> logger, DevelopersContext context)
     {
       _logger = logger;
-      this.context = contexto;
+      this.context = context;
     }
 
-    [Route("TesteClientes")]
-    public JsonResult index()
+    [HttpGet]
+    public IActionResult index()
     {
-      IList<Cliente> dao = new ClienteDAO(context).Lista();
-      return Json(dao);
+      try
+      {
+        IList<Cliente> dao = new ClienteDAO(context).Lista();
+        return Json(dao);
+      }
+      catch
+      {
+        return BadRequest(Json(new { error = "Bad Request - Database error" }));
+      }
+    }
+    [HttpGet("{id:int:min(1)}")]
+    public IActionResult ClienteCliente(int id)
+    {
+      ClienteDAO dao = new ClienteDAO(context);
+      try
+      {
+        Cliente cliente = dao.FetchById(id);
+        if (cliente == null)
+        {
+          throw new Exception("e");
+        }
+
+        return Json(cliente);
+      }
+      catch
+      {
+        return BadRequest(
+          Json(new { error = $"Bad Request - Not found with id ${id}" }));
+      }
+
     }
 
-    [HttpPost("TesteClientes")]
-    [ApiConventionMethod(typeof(DefaultApiConventions),
-                       nameof(DefaultApiConventions.Post))]
+    [HttpPost]
     public IActionResult Add([FromBody] Cliente cliente)
     {
       ClienteDAO dao = new ClienteDAO(context);
@@ -42,13 +69,12 @@ namespace DevelopersTeste.Controllers
       }
       catch
       {
-        return BadRequest();
+        return BadRequest(
+          Json(new { error = "Bad Request - Your request is missing parameters" }));
       }
     }
 
-    [HttpPut("TesteClientes")]
-    [ApiConventionMethod(typeof(DefaultApiConventions),
-                           nameof(DefaultApiConventions.Put))]
+    [HttpPut]
     public IActionResult Editar([FromBody] Cliente cliente)
     {
       ClienteDAO dao = new ClienteDAO(context);
@@ -61,14 +87,13 @@ namespace DevelopersTeste.Controllers
       }
       catch
       {
-        return BadRequest();
+        return BadRequest(
+          Json(new { error = "Bad Request - Not found" }));
       }
 
     }
 
-    [HttpDelete("TesteClientes")]
-    [ApiConventionMethod(typeof(DefaultApiConventions),
-                       nameof(DefaultApiConventions.Delete))]
+    [HttpDelete]
     public IActionResult Apagar(int clienteId)
     {
       ClienteDAO dao = new ClienteDAO(context);
@@ -79,29 +104,9 @@ namespace DevelopersTeste.Controllers
       }
       catch
       {
-        return BadRequest();
+        return BadRequest(
+          Json(new { error = $"Bad Request - Not found with ID: {clienteId}" }));
       }
-    }
-
-    [HttpGet("TesteClientes/{clienteId}")]
-    public IActionResult ClienteCliente(int clienteId)
-    {
-      ClienteDAO dao = new ClienteDAO(context);
-      try
-      {
-        Cliente cliente = dao.FetchById(clienteId);
-        if (cliente == null)
-        {
-          throw new Exception("e");
-        }
-
-        return Json(cliente);
-      }
-      catch
-      {
-        return NotFound();
-      }
-
     }
   }
 }

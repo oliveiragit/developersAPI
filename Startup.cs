@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 
 using DevelopersTeste.DAO;
 
@@ -25,10 +24,9 @@ namespace DevelopersTeste
 
     public IConfiguration Configuration { get; }
 
-    // This method gets called by the runtime. Use this method to add services to the grupo.
     public void ConfigureServices(IServiceCollection services)
     {
-      services.AddControllersWithViews();
+      services.AddControllers();
       services.AddDbContext<DevelopersContext>(options =>
          options.UseSqlite(Configuration.GetConnectionString("DeveloperTest")));
 
@@ -47,25 +45,21 @@ namespace DevelopersTeste
         // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
         app.UseHsts();
       }
+
       using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
       {
         var context = serviceScope.ServiceProvider.GetRequiredService<DevelopersContext>();
         context.Database.EnsureCreated();
       }
       app.UseHttpsRedirection();
-      app.UseStaticFiles();
       app.UseRouting();
-
       app.UseAuthorization();
 
       app.UseEndpoints(endpoints =>
       {
-        endpoints.MapControllerRoute(
-                  name: "default",
-                  pattern: "{controller=Home}/{action=Index}/{id?}");
+        endpoints.MapControllers();
+        endpoints.MapControllerRoute("default", "api/{controller}");
       });
-
-
     }
   }
 }
