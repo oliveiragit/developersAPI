@@ -10,27 +10,53 @@ using DevelopersTeste.Models;
 
 namespace DevelopersTeste.Controllers
 {
-  [Route("TesteGrupos")]
+  [Route("api/TesteGrupos")]
   public class GrupoController : Controller
   {
     private readonly ILogger<GrupoController> _logger;
     DevelopersContext context;
-    public GrupoController(ILogger<GrupoController> logger, DevelopersContext contexto)
+    public GrupoController(ILogger<GrupoController> logger, DevelopersContext context)
     {
       _logger = logger;
-      this.context = contexto;
+      this.context = context;
     }
 
     [HttpGet]
-    public JsonResult index()
+    public IActionResult index()
     {
-      IList<Grupo> dao = new GrupoDAO(context).Lista();
-      return Json(dao);
+      try
+      {
+        IList<Grupo> dao = new GrupoDAO(context).Lista();
+        return Json(dao);
+      }
+      catch
+      {
+        return BadRequest(Json(new { error = "Bad Request - Database error" }));
+      }
+    }
+    [HttpGet("{id:int:min(1)}")]
+    public IActionResult GrupoGrupo(int id)
+    {
+      GrupoDAO dao = new GrupoDAO(context);
+      try
+      {
+        Grupo grupo = dao.FetchById(id);
+        if (grupo == null)
+        {
+          throw new Exception();
+        }
+
+        return Json(grupo);
+      }
+      catch
+      {
+        return BadRequest(
+          Json(new { error = $"Bad Request - Not found with id ${id}" }));
+      }
+
     }
 
     [HttpPost]
-    [ApiConventionMethod(typeof(DefaultApiConventions),
-                       nameof(DefaultApiConventions.Post))]
     public IActionResult Add([FromBody] Grupo grupo)
     {
       GrupoDAO dao = new GrupoDAO(context);
@@ -43,12 +69,11 @@ namespace DevelopersTeste.Controllers
       }
       catch
       {
-        return BadRequest();
+        return BadRequest(
+          Json(new { error = "Bad Request - Your request is missing parameters" }));
       }
     }
 
-    [ApiConventionMethod(typeof(DefaultApiConventions),
-                       nameof(DefaultApiConventions.Put))]
     [HttpPut]
     public IActionResult Editar([FromBody] Grupo grupo)
     {
@@ -62,14 +87,13 @@ namespace DevelopersTeste.Controllers
       }
       catch
       {
-        return BadRequest();
+        return BadRequest(
+          Json(new { error = "Bad Request - Not found" }));
       }
 
     }
 
     [HttpDelete]
-    [ApiConventionMethod(typeof(DefaultApiConventions),
-                       nameof(DefaultApiConventions.Delete))]
     public IActionResult Apagar(int grupoId)
     {
       GrupoDAO dao = new GrupoDAO(context);
@@ -80,29 +104,9 @@ namespace DevelopersTeste.Controllers
       }
       catch
       {
-        return BadRequest();
+        return BadRequest(
+          Json(new { error = $"Bad Request - Not found with ID: {grupoId}" }));
       }
-    }
-
-    [HttpGet("{grupoId}")]
-    public IActionResult GrupoGrupo(int grupoId)
-    {
-      GrupoDAO dao = new GrupoDAO(context);
-      try
-      {
-        Grupo grupo = dao.FetchById(grupoId);
-        if (grupo == null)
-        {
-          throw new Exception();
-        }
-
-        return Json(grupo);
-      }
-      catch
-      {
-        return NotFound();
-      }
-
     }
   }
 }
