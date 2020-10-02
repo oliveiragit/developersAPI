@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-
 namespace DevelopersTeste.Models
 
 {
@@ -11,13 +10,15 @@ namespace DevelopersTeste.Models
     [Required]
     public string Nome { get; set; }
     [Required]
-    [MinLength(2)]
+    [MinLength(11)]
+    [MaxLength(11)]
     public string Cpf { get; set; }
     [MaxLength(13)]
     public string Telefone { get; set; }
     public bool Ativo { get; set; }
     public DateTime DataCadastro { get; set; }
-    public int? GrupoId { get; set; }
+    [Required]
+    public int GrupoId { get; set; }
     public Grupo Grupo { get; set; }
 
 
