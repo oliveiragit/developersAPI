@@ -4,108 +4,101 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
-using DevelopersTeste.DAO;
+using DevelopersTeste.Services;
 using DevelopersTeste.Models;
 
 namespace DevelopersTeste.Controllers
 {
   [Route("api/TesteGrupos")]
+  [ApiController]
   public class GrupoController : Controller
   {
     private readonly ILogger<GrupoController> _logger;
-    DevelopersContext context;
+    DevelopersContext _context;
     public GrupoController(ILogger<GrupoController> logger, DevelopersContext context)
     {
       _logger = logger;
-      this.context = context;
+      this._context = context;
     }
 
     [HttpGet]
-    public IActionResult index()
+    public async Task<ActionResult<Grupo>> index()
     {
       try
       {
-        IList<Grupo> dao = new GrupoDAO(context).Lista();
-        return Json(dao);
+        IAsyncEnumerable<Grupo> gruposList = new GrupoService(_context).GetList();
+        var grupos = new List<Grupo>();
+        await foreach (Grupo grupo in gruposList)
+        {
+          grupos.Add(grupo);
+        }
+        return Json(grupos);
       }
       catch
       {
         return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
     }
+
     [HttpGet("{id:int:min(1)}")]
-    public IActionResult GrupoGrupo(int id)
+    public async Task<ActionResult<Grupo>> getById(int id)
     {
-      GrupoDAO dao = new GrupoDAO(context);
       try
       {
-        Grupo grupo = dao.FetchById(id);
+        Grupo grupo = await new GrupoService(_context).FetchById(id);
         if (grupo == null)
-        {
           throw new Exception();
-        }
-
-        return Json(grupo);
+        return grupo;
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = $"Bad Request - Not found with id ${id}" }));
+        return NotFound(
+          Json(new { error = $"Not Found - id {id}" }));
+
       }
-
     }
-
     [HttpPost]
-    public IActionResult Add([FromBody] Grupo grupo)
+    public async Task<ActionResult<Grupo>> Add([FromBody] Grupo grupo)
     {
-      GrupoDAO dao = new GrupoDAO(context);
       try
       {
-        if (!ModelState.IsValid)
-          throw new Exception();
-        dao.Add(grupo);
-        return Json(grupo);
+        await new GrupoService(_context).Add(grupo);
+        return grupo;
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = "Bad Request - Your request is missing parameters" }));
+        return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
     }
-
     [HttpPut]
-    public IActionResult Editar([FromBody] Grupo grupo)
+    public async Task<ActionResult<Grupo>> Update([FromBody] Grupo grupo)
     {
-      GrupoDAO dao = new GrupoDAO(context);
       try
       {
-        if (!ModelState.IsValid)
-          throw new Exception();
-        dao.Update(grupo);
-        return Json(grupo);
+        await new GrupoService(_context).Update(grupo);
+        return grupo;
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = "Bad Request - Not found" }));
+        return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
-
     }
 
     [HttpDelete]
-    public IActionResult Apagar(int grupoId)
+    public async Task<ActionResult<Grupo>> Remove(int grupoId)
     {
-      GrupoDAO dao = new GrupoDAO(context);
+
+      if (grupoId == 0)
+        return BadRequest();
+  
       try
       {
-        dao.Remove(grupoId);
+        await new GrupoService(_context).Remove(grupoId);
         return NoContent();
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = $"Bad Request - Not found with ID: {grupoId}" }));
+        return BadRequest(Json(new { error = "Bad Request - remove fails" }));
       }
     }
   }

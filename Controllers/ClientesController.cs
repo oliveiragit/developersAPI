@@ -4,108 +4,101 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
-using DevelopersTeste.DAO;
+using DevelopersTeste.Services;
 using DevelopersTeste.Models;
 
 namespace DevelopersTeste.Controllers
 {
   [Route("api/TesteClientes")]
+  [ApiController]
   public class ClienteController : Controller
   {
     private readonly ILogger<ClienteController> _logger;
-    DevelopersContext context;
+    DevelopersContext _context;
     public ClienteController(ILogger<ClienteController> logger, DevelopersContext context)
     {
       _logger = logger;
-      this.context = context;
+      this._context = context;
     }
 
     [HttpGet]
-    public IActionResult index()
+    public async Task<ActionResult<Cliente>> index()
     {
       try
       {
-        IList<Cliente> dao = new ClienteDAO(context).Lista();
-        return Json(dao);
+        IAsyncEnumerable<Cliente> clientesList = new ClienteService(_context).GetList();
+        var clientes = new List<Cliente>();
+        await foreach (Cliente cliente in clientesList)
+        {
+          clientes.Add(cliente);
+        }
+        return Json(clientes);
       }
       catch
       {
         return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
     }
+
     [HttpGet("{id:int:min(1)}")]
-    public IActionResult ClienteCliente(int id)
+    public async Task<ActionResult<Cliente>> getById(int id)
     {
-      ClienteDAO dao = new ClienteDAO(context);
       try
       {
-        Cliente cliente = dao.FetchById(id);
+        Cliente cliente = await new ClienteService(_context).FetchById(id);
         if (cliente == null)
-        {
-          throw new Exception("e");
-        }
-
-        return Json(cliente);
+          throw new Exception();
+        return cliente;
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = $"Bad Request - Not found with id ${id}" }));
+        return NotFound(
+          Json(new { error = $"Not Found - id {id}" }));
+
       }
-
     }
-
     [HttpPost]
-    public IActionResult Add([FromBody] Cliente cliente)
+    public async Task<ActionResult<Cliente>> Add([FromBody] Cliente cliente)
     {
-      ClienteDAO dao = new ClienteDAO(context);
       try
       {
-        if (!ModelState.IsValid)
-          throw new Exception();
-        dao.Add(cliente);
-        return Json(cliente);
+        await new ClienteService(_context).Add(cliente);
+        return cliente;
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = "Bad Request - Your request is missing parameters" }));
+        return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
     }
-
     [HttpPut]
-    public IActionResult Editar([FromBody] Cliente cliente)
+    public async Task<ActionResult<Cliente>> Update([FromBody] Cliente cliente)
     {
-      ClienteDAO dao = new ClienteDAO(context);
       try
       {
-        if (!ModelState.IsValid)
-          throw new Exception();
-        dao.Update(cliente);
-        return Json(cliente);
+        await new ClienteService(_context).Update(cliente);
+        return cliente;
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = "Bad Request - Not found" }));
+        return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
-
     }
 
     [HttpDelete]
-    public IActionResult Apagar(int clienteId)
+    public async Task<ActionResult<Cliente>> Remove(int clienteId)
     {
-      ClienteDAO dao = new ClienteDAO(context);
+
+      if (clienteId == 0)
+        return BadRequest();
+  
       try
       {
-        dao.Remove(clienteId);
+        await new ClienteService(_context).Remove(clienteId);
         return NoContent();
       }
       catch
       {
-        return BadRequest(
-          Json(new { error = $"Bad Request - Not found with ID: {clienteId}" }));
+        return BadRequest(Json(new { error = "Bad Request - remove fails" }));
       }
     }
   }
