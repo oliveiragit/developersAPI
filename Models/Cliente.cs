@@ -18,7 +18,7 @@ namespace DevelopersTeste.Models
     public bool Ativo { get; set; }
     public DateTime DataCadastro { get; set; }
     [Required]
-    public int GrupoId { get; set; }
+    public int? GrupoId { get; set; }
     public Grupo Grupo { get; set; }
 
 

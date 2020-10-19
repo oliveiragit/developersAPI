@@ -57,6 +57,7 @@ namespace DevelopersTeste.Controllers
 
       }
     }
+
     [HttpPost]
     public async Task<ActionResult<Cliente>> Add([FromBody] Cliente cliente)
     {
@@ -70,6 +71,7 @@ namespace DevelopersTeste.Controllers
         return BadRequest(Json(new { error = "Bad Request - Database error" }));
       }
     }
+    
     [HttpPut]
     public async Task<ActionResult<Cliente>> Update([FromBody] Cliente cliente)
     {

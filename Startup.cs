@@ -33,7 +33,8 @@ namespace DevelopersTeste
             builder =>
             {
               builder
-                .SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+                // .SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+                .SetIsOriginAllowed(origin => new Uri(origin).Host != "")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -63,12 +64,12 @@ namespace DevelopersTeste
         var context = serviceScope.ServiceProvider.GetRequiredService<DevelopersContext>();
         context.Database.EnsureCreated();
       }
+
       app.UseCors(MyAllowSpecificOrigins);
 
       // app.UseHttpsRedirection();
       app.UseRouting();
       app.UseAuthorization();
-
       app.UseEndpoints(endpoints =>
       {
         endpoints.MapControllers();
